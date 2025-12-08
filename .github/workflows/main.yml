@@ -2,7 +2,7 @@ name: My first workflow
 on: [push]
 jobs:
   say-hello:
-    run-on: unbuntu-latest
-  steps:
-    - name: Say something nice
-      run: echo "You are doing great!"
+    runs-on: unbuntu-latest
+    steps:
+      - name: Say something nice
+        run: echo "You are doing great!"
