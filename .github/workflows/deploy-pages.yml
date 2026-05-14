@@ -1,0 +1,69 @@
+name: Deploy Crystal Ball AI UI to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - work
+    paths:
+      - "index.html"
+      - "styles.css"
+      - "assets/**"
+      - "scripts/check-static.py"
+      - "package.json"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate static UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run static UI checks
+        run: python3 scripts/check-static.py
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: validate
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepare static site artifact
+        run: |
+          mkdir -p dist
+          cp index.html styles.css .nojekyll dist/
+          cp -R assets dist/assets
+
+      - name: Upload static site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy static site
+        id: deployment
+        uses: actions/deploy-pages@v4
